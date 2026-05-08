@@ -1,0 +1,76 @@
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import matplotlib.pyplot as plt
+
+DATA_DIR = "fault_dataset"
+
+IMG_SIZE = (224, 224)
+BATCH_SIZE = 32
+
+train_ds = tf.keras.utils.image_dataset_from_directory(
+    DATA_DIR + "/train",
+    image_size=IMG_SIZE,
+    batch_size=BATCH_SIZE,
+    label_mode="categorical"
+)
+
+val_ds = tf.keras.utils.image_dataset_from_directory(
+    DATA_DIR + "/validation",
+    image_size=IMG_SIZE,
+    batch_size=BATCH_SIZE,
+    label_mode="categorical"
+)
+
+test_ds = tf.keras.utils.image_dataset_from_directory(
+    DATA_DIR + "/test",
+    image_size=IMG_SIZE,
+    batch_size=BATCH_SIZE,
+    label_mode="categorical",
+    shuffle=False
+)
+
+class_names = train_ds.class_names
+print("Classes:", class_names)
+
+num_classes = len(class_names)
+
+model = keras.Sequential([
+    # Normalise pixel values from 0-255 to 0-1
+    layers.Rescaling(1./255, input_shape=(224, 224, 3)),
+
+    # Optional augmentation to improve robustness
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(0.05),
+    layers.RandomZoom(0.1),
+
+    # CNN feature extraction
+    layers.Conv2D(16, 3, padding="same", activation="relu"),
+    layers.MaxPooling2D(),
+
+    layers.Conv2D(32, 3, padding="same", activation="relu"),
+    layers.MaxPooling2D(),
+
+    layers.Conv2D(64, 3, padding="same", activation="relu"),
+    layers.MaxPooling2D(),
+
+    # Classification head
+    layers.Flatten(),
+    layers.Dense(128, activation="relu"),
+    layers.Dropout(0.3),
+    layers.Dense(num_classes, activation="softmax")
+])
+
+model.summary()
+
+model.compile(
+    optimizer="adam",
+    loss="categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+model.compile(
+    optimizer="adam",
+    loss="categorical_crossentropy",
+    metrics=["accuracy"]
+)
